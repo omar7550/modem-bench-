@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+/captures/*
+!/captures/55a8952356fb/
+!/captures/dee07c166696/
+/captures/*/private/
+/runs/

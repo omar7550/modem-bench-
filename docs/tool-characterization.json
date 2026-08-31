@@ -1,0 +1,4034 @@
+{
+  "ast_gate": {
+    "ast_policy_version": "modembench-ast-v5-math1-dunderdef1-noframes-libnarrowed",
+    "ast_rejected_rate": 0.25,
+    "interpretation": "these are idioms, not receivers; the rate bounds how much of a measured agent failure rate is gate strictness rather than task difficulty",
+    "probe_count": 12,
+    "probes": [
+      {
+        "accepted": true,
+        "name": "numpy_and_scipy_only",
+        "note": "the intended shape: numpy plus scipy.signal, module-level function",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "stdlib_math",
+        "note": "`import math` for pi and sqrt: the single most natural import to reach for",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "class_with_constructor",
+        "note": "a class holding carrier-loop state; `__init__` is a dunder *definition*, not a dunder read, and is accepted from `dunderdef1` on",
+        "rules": []
+      },
+      {
+        "accepted": false,
+        "name": "underscore_prefixed_attribute",
+        "note": "`state._value`: any attribute beginning with an underscore is refused",
+        "rules": [
+          "private_attribute"
+        ]
+      },
+      {
+        "accepted": true,
+        "name": "main_guard",
+        "note": "`if __name__ == '__main__':` for local testing, left in the submission; a comparison operand, not an attribute read, so accepted from `dunderdef1` on",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "module_level_underscore_helper",
+        "note": "`def _rrc(...)` as a private module helper, then called normally",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "scipy_signal_from_import",
+        "note": "`from scipy.signal import resample_poly`",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "numpy_fft_and_linalg",
+        "note": "`np.fft` and `np.linalg` for coarse frequency and least squares",
+        "rules": []
+      },
+      {
+        "accepted": true,
+        "name": "cmath_for_phase",
+        "note": "`import cmath` to unwrap a phase",
+        "rules": []
+      },
+      {
+        "accepted": false,
+        "name": "getattr_dispatch",
+        "note": "`getattr(signal, name)` to pick a filter by name",
+        "rules": [
+          "builtin_banned"
+        ]
+      },
+      {
+        "accepted": true,
+        "name": "generator_and_comprehensions",
+        "note": "plain Python control flow, closures and comprehensions",
+        "rules": []
+      },
+      {
+        "accepted": false,
+        "name": "numpy_save_debug",
+        "note": "`np.save` left behind from local debugging",
+        "rules": [
+          "numpy_io_attribute"
+        ]
+      }
+    ],
+    "rejected_count": 3
+  },
+  "beta_from_occupied_bandwidth": {
+    "beta_stdev": 0.09329436142732127,
+    "correlation": 0.2641216965382825,
+    "mean_absolute_error": 0.12649135215152876,
+    "mean_predictor_absolute_error": 0.08182207792423093,
+    "n": 40,
+    "verdict": "the implied roll-off is a worse estimator of rrc_beta than the population mean; the occupied bandwidth carries no usable beta information",
+    "worse_than_quoting_the_mean": true
+  },
+  "capture_count": 40,
+  "characterization_policy_version": "modembench-characterization-v1",
+  "envelope_null_is_not_the_symbol_period": {
+    "exact": 0,
+    "n": 40,
+    "period_fraction_mean": 0.6849080764210035,
+    "period_fraction_relative_spread": 0.14723473492496378,
+    "period_fraction_stdev": 0.10084225907981328,
+    "verdict": "the first squared-envelope autocorrelation null is not at the symbol period and must not be read as one; it is a shape cross-check",
+    "within_2": 2
+  },
+  "estimable_quantities": [
+    {
+      "manifest_field": "impairments.cfo.applied_value",
+      "quantity": "spectral centroid",
+      "strength": "direct estimate of the carrier frequency offset; median error under 2 Hz, p90 under 160 Hz over the dev split",
+      "tool": "spectrum"
+    },
+    {
+      "manifest_field": "impairments.awgn.noise_variance_per_component",
+      "quantity": "noise-floor PSD = 2 * sigma^2 / sample_rate",
+      "strength": "STRONG and previously unlisted: the median of the smoothed PSD recovers the AWGN noise power to a median 0.5% relative error, so the noise variance is effectively published. Combined with the histogram's RMS it bounds the in-record SNR, though not the manifest's per-symbol Es/N0, which also depends on the unpublished burst duty cycle",
+      "tool": "spectrum"
+    },
+    {
+      "manifest_field": "waveform.rrc_beta",
+      "quantity": "occupied bandwidth / estimated symbol rate, minus one",
+      "strength": "NONE, measured. The earlier claim that this 'resolves beta once sps is known' is false: over the dev split the implied roll-off correlates with the true one at r = 0.25 and its mean absolute error (0.126) exceeds beta's own spread (sd 0.092), so the population mean is the better estimator. Kept in the table as a checked-in negative result",
+      "tool": "spectrum"
+    },
+    {
+      "manifest_field": "waveform.sps",
+      "quantity": "first signal-autocorrelation null lag",
+      "strength": "coarse period estimate: exact on 12 of 40 dev captures, within +/-2 samples on 38 of 40. Weaker than symbol_rate_candidates on the same parameter",
+      "tool": "symbol_period_statistic"
+    },
+    {
+      "manifest_field": "waveform.sps",
+      "quantity": "first squared-envelope autocorrelation null lag",
+      "strength": "NONE as a period estimate, measured. It is a different statistic: the first envelope null equals the symbol period on 0 of 40 dev captures and lands within +/-2 samples on 2 of 40, sitting at roughly 0.69 of the period. Reported as a shape cross-check with the published error, not as a period",
+      "tool": "symbol_period_statistic"
+    },
+    {
+      "manifest_field": "impairments.amplitude.applied_value",
+      "quantity": "reported RMS scale",
+      "strength": "the gain, up to the unknown noise power; derivable by the receiver from iq.npy unaided, so this narrows nothing the sandbox does not already have",
+      "tool": "amplitude_histogram"
+    },
+    {
+      "manifest_field": "waveform.sps",
+      "quantity": "ranked integer samples-per-symbol",
+      "strength": "SUBSTANTIAL: reduces a 31-way discrete choice to a ranked shortlist, top-1 correct on 40 of 40 dev captures; the tool a tools-ablation arm removes",
+      "tool": "symbol_rate_candidates"
+    },
+    {
+      "manifest_field": "framing.payload_length_bytes",
+      "quantity": "upper bound only: floor(capture_samples / sps) symbols minus the framing overhead",
+      "strength": "BOUND, NOT A DETERMINATION. The earlier claim that capture length, sps and pulse_span_symbols 'determine the frame symbol count, hence the payload length' is false: the burst starts at an unpublished offset into the record (1738 to 19598 samples over the dev split), so capture_samples/sps bounds the frame symbol count from above and determines nothing. Measured over the dev split the bound leaves a median of 90 of the 97 possible payload lengths feasible and binds at all (excludes any length) on only 22 of 40 captures. Note the span is genuinely shared -- the published pulse_span_symbols equals the manifest's rrc_span_symbols, 12 on every capture -- so it is the offset, not the span, that breaks the determination. Recorded so the calibration neither mistakes this for model capability nor for a leak",
+      "tool": "symbol_rate_candidates + the capture's own length"
+    }
+  ],
+  "first_null_lag_error": {
+    "exact": 12,
+    "max_abs": 4,
+    "n": 40,
+    "within_1": 33,
+    "within_2": 38
+  },
+  "generated_on": "2026-08-24",
+  "per_quantity": [
+    {
+      "absolute_error": {
+        "max_abs": 0.0013097544307961173,
+        "median": 1.7750195640183278e-05,
+        "n": 40,
+        "p90_abs": 0.00027988812218054937
+      },
+      "quantity": "rms_magnitude",
+      "relative_error": {
+        "max_abs": 0.006545248781267811,
+        "median": 0.00034511605108527687,
+        "n": 40,
+        "p90_abs": 0.0040729707891272865
+      },
+      "tool": "amplitude_histogram"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 0.3232513764955725,
+        "median": 0.08527401711377304,
+        "n": 40,
+        "p90_abs": 0.23276493178271473
+      },
+      "quantity": "beta_from_occupied_bandwidth",
+      "relative_error": {
+        "max_abs": 1.2125148269647847,
+        "median": 0.24702108231539008,
+        "n": 40,
+        "p90_abs": 1.0199285523797863
+      },
+      "tool": "spectrum"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 3.467088438162132e-10,
+        "median": 2.025021741940497e-12,
+        "n": 40,
+        "p90_abs": 5.0887425732592533e-11
+      },
+      "quantity": "noise_floor_psd",
+      "relative_error": {
+        "max_abs": 0.02275403090771498,
+        "median": 0.005126764671415705,
+        "n": 40,
+        "p90_abs": 0.01658906368878015
+      },
+      "tool": "spectrum"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 16163.274879005126,
+        "median": 3143.1467278907076,
+        "n": 40,
+        "p90_abs": 9596.625558274187
+      },
+      "quantity": "occupied_bandwidth_hz",
+      "relative_error": {
+        "max_abs": 0.25521147570590136,
+        "median": 0.06518682223806578,
+        "n": 40,
+        "p90_abs": 0.1908042223345762
+      },
+      "tool": "spectrum"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 195.3451524700438,
+        "median": 6.471327247534077,
+        "n": 40,
+        "p90_abs": 143.9478564096957
+      },
+      "quantity": "spectral_centroid_hz",
+      "relative_error": {
+        "max_abs": 8.877722607614826,
+        "median": -0.00042246784635585036,
+        "n": 40,
+        "p90_abs": 0.1771910685573323
+      },
+      "tool": "spectrum"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 19.0,
+        "median": -7.5,
+        "n": 40,
+        "p90_abs": 14.0
+      },
+      "quantity": "first_envelope_null_lag_samples",
+      "relative_error": {
+        "max_abs": 0.5666666666666667,
+        "median": -0.30303030303030304,
+        "n": 40,
+        "p90_abs": 0.4090909090909091
+      },
+      "tool": "symbol_period_statistic"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 4.0,
+        "median": 0.0,
+        "n": 40,
+        "p90_abs": 2.0
+      },
+      "quantity": "first_null_lag_samples",
+      "relative_error": {
+        "max_abs": 0.12121212121212122,
+        "median": 0.0,
+        "n": 40,
+        "p90_abs": 0.07692307692307693
+      },
+      "tool": "symbol_period_statistic"
+    },
+    {
+      "absolute_error": {
+        "max_abs": 0.045454545455868356,
+        "median": 0.0,
+        "n": 40,
+        "p90_abs": 0.03846153846097877
+      },
+      "quantity": "top_symbol_rate_hz",
+      "relative_error": {
+        "max_abs": 1.1999999999679857e-06,
+        "median": 0.0,
+        "n": 40,
+        "p90_abs": 1.0999999999003193e-06
+      },
+      "tool": "symbol_rate_candidates"
+    }
+  ],
+  "rows": [
+    {
+      "capture_id": "0015ca52e3c2",
+      "envelope_null_lag_error": -1,
+      "envelope_null_period_fraction": 0.9473684210526315,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.2246084101566359,
+      "manifest_sha256": "1a456ae7defcd8d915a83583bb822a39b0acefe7ef4b0bd0fbe454bd3985403a",
+      "measurements": [
+        {
+          "absolute_error": -1108.6567939335728,
+          "estimate": 64453.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.016910114190780146,
+          "tool": "spectrum",
+          "truth": 65561.75679393357,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -153.0082483536188,
+          "estimate": 946.593,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.13914884926032128,
+          "tool": "spectrum",
+          "truth": 1099.6012483536188,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 8.879385714171378e-13,
+          "estimate": 1.3609e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.006567492847630651,
+          "tool": "spectrum",
+          "truth": 1.3520206142858285e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.021064968928101946,
+          "estimate": 0.2246084101566359,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.08574379937533322,
+          "tool": "spectrum",
+          "truth": 0.24567337908473785,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 20,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.05263157894736842,
+          "tool": "symbol_period_statistic",
+          "truth": 19.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 18,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.05263157894736842,
+          "tool": "symbol_period_statistic",
+          "truth": 19.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.5312200360071025e-05,
+          "estimate": 0.0189983,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.002379391046369568,
+          "tool": "amplitude_histogram",
+          "truth": 0.01904361220036007,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.021052631578641012,
+          "estimate": 52631.6,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 3.999999999941792e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 52631.57894736842,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.29439,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.07328187512734946,
+        "cfo_hz": 1099.6012483536188,
+        "rrc_beta": 0.24567337908473785,
+        "snr_db": 15.992049466836253,
+        "sps": 19,
+        "symbol_rate_hz": 52631.57894736842
+      }
+    },
+    {
+      "capture_id": "02994c952aa4",
+      "envelope_null_lag_error": -8,
+      "envelope_null_period_fraction": 0.7647058823529411,
+      "first_null_lag_error": 2,
+      "implied_beta": 0.460937446875064,
+      "manifest_sha256": "9be57f90bb8fb9f82daabbc14ce61568e99234de0efdf2955c4b38c6d6a0f09c",
+      "measurements": [
+        {
+          "absolute_error": 7380.001299174401,
+          "estimate": 42968.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.20736865442449443,
+          "tool": "spectrum",
+          "truth": 35588.7987008256,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 84.78170863305738,
+          "estimate": 254.517,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.49949369957348383,
+          "tool": "spectrum",
+          "truth": 169.73529136694262,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 5.31075510738625e-12,
+          "estimate": 1.3723e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.003885001383316257,
+          "tool": "spectrum",
+          "truth": 1.3669892448926137e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.2509182910469937,
+          "estimate": 0.460937446875064,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 1.1947400229167906,
+          "tool": "spectrum",
+          "truth": 0.2100191558280703,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 2.0,
+          "estimate": 36,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.058823529411764705,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -8.0,
+          "estimate": 26,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.23529411764705882,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -9.565074897897874e-05,
+          "estimate": 0.064298,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0014854065248116931,
+          "tool": "amplitude_histogram",
+          "truth": 0.06439365074897897,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03529411764611723,
+          "estimate": 29411.8,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.1999999999679857e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 29411.764705882353,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.08245,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.3671926168687905,
+        "cfo_hz": 169.73529136694262,
+        "rrc_beta": 0.2100191558280703,
+        "snr_db": 19.93942992085998,
+        "sps": 34,
+        "symbol_rate_hz": 29411.764705882353
+      }
+    },
+    {
+      "capture_id": "08029db37916",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.696969696969697,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.5468765468765469,
+      "manifest_sha256": "930daa31d2c9c22aa1e56b34c12cdda041eac83fc619d6b89407f603e697dc9c",
+      "measurements": [
+        {
+          "absolute_error": 4617.3781789585555,
+          "estimate": 46875.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.1092673458651526,
+          "tool": "spectrum",
+          "truth": 42257.621821041444,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 6.175540862724574,
+          "estimate": 1613.12,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.0038430331724346304,
+          "tool": "spectrum",
+          "truth": 1606.9444591372753,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -1.081958029010895e-13,
+          "estimate": 7.81036e-11,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.001383369372744619,
+          "tool": "spectrum",
+          "truth": 7.82117958029011e-11,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.15237502678217923,
+          "estimate": 0.5468765468765469,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.3862469953112729,
+          "tool": "spectrum",
+          "truth": 0.3945015200943676,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 34,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.030303030303030304,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 23,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.30303030303030304,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -3.542386593560071e-05,
+          "estimate": 0.0223265,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0015841153090393374,
+          "tool": "amplitude_histogram",
+          "truth": 0.0223619238659356,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.030303030303912237,
+          "estimate": 30303.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -1.0000000000291038e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 30303.030303030304,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 6.19916,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.15171643569424495,
+        "cfo_hz": 1606.9444591372753,
+        "rrc_beta": 0.3945015200943676,
+        "snr_db": 24.688937815124486,
+        "sps": 33,
+        "symbol_rate_hz": 30303.030303030304
+      }
+    },
+    {
+      "capture_id": "13475ae56f35",
+      "envelope_null_lag_error": -3,
+      "envelope_null_period_fraction": 0.75,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.21874448749779485,
+      "manifest_sha256": "28b13e77da22104ed62e3185f17e51b07a814accfa8df17ad80482512d527c74",
+      "measurements": [
+        {
+          "absolute_error": -2118.8498839947715,
+          "estimate": 101562.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.020436270404471855,
+          "tool": "spectrum",
+          "truth": 103680.84988399477,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 14.79909112567293,
+          "estimate": 4248.51,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.003495536526750656,
+          "tool": "spectrum",
+          "truth": 4233.710908874327,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.0522920335413633e-12,
+          "estimate": 3.96532e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.0026607990557902662,
+          "tool": "spectrum",
+          "truth": 3.9547970796645863e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.025425711110142413,
+          "estimate": 0.21874448749779485,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.10413109894286623,
+          "tool": "spectrum",
+          "truth": 0.24417019860793726,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 11,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.08333333333333333,
+          "tool": "symbol_period_statistic",
+          "truth": 12.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -3.0,
+          "estimate": 9,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.25,
+          "tool": "symbol_period_statistic",
+          "truth": 12.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 5.030721377749514e-05,
+          "estimate": 0.0372252,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0013532578040450906,
+          "tool": "amplitude_histogram",
+          "truth": 0.037174892786222505,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03333333332557231,
+          "estimate": 83333.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -3.9999999990686776e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 83333.33333333333,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.15581,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.19634905038262984,
+        "cfo_hz": 4233.710908874327,
+        "rrc_beta": 0.24417019860793726,
+        "snr_db": 19.88990312455464,
+        "sps": 12,
+        "symbol_rate_hz": 83333.33333333333
+      }
+    },
+    {
+      "capture_id": "13dd80b28ce5",
+      "envelope_null_lag_error": -8,
+      "envelope_null_period_fraction": 0.5555555555555556,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.26562398750080995,
+      "manifest_sha256": "acb93eada89eb60e0d705fcc2be781254ff194e79aa1413d5803123f88a26d7d",
+      "measurements": [
+        {
+          "absolute_error": -1722.4731777351408,
+          "estimate": 70312.5,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.02391162378148188,
+          "tool": "spectrum",
+          "truth": 72034.97317773514,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -31.387081223307575,
+          "estimate": -516.399,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.06471404105382142,
+          "tool": "spectrum",
+          "truth": -485.0119187766924,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.5539775949131551e-12,
+          "estimate": 9.52288e-11,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.01658906368878015,
+          "tool": "spectrum",
+          "truth": 9.367482240508684e-11,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.031005529698422685,
+          "estimate": 0.26562398750080995,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.1045261105205443,
+          "tool": "spectrum",
+          "truth": 0.29662951719923264,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 18,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 18.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -8.0,
+          "estimate": 10,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.4444444444444444,
+          "tool": "symbol_period_statistic",
+          "truth": 18.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.00011624317056148359,
+          "estimate": 0.0269652,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.004329522793005829,
+          "tool": "amplitude_histogram",
+          "truth": 0.026848956829438518,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.04444444444379769,
+          "estimate": 55555.6,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 7.999999999883584e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 55555.555555555555,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.17357,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.11542731492447089,
+        "cfo_hz": -485.0119187766924,
+        "rrc_beta": 0.29662951719923264,
+        "snr_db": 21.53036786879409,
+        "sps": 18,
+        "symbol_rate_hz": 55555.555555555555
+      }
+    },
+    {
+      "capture_id": "14161fed1139",
+      "envelope_null_lag_error": -14,
+      "envelope_null_period_fraction": 0.6410256410256411,
+      "first_null_lag_error": 2,
+      "implied_beta": 0.5996099996099995,
+      "manifest_sha256": "68c7ae950b30a93075fcb059fc2cd5c3cd338d56c125891b10be19485055c950",
+      "measurements": [
+        {
+          "absolute_error": 2566.5808490331547,
+          "estimate": 41015.6,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.06675283025961444,
+          "tool": "spectrum",
+          "truth": 38449.019150966844,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -40.930451682416106,
+          "estimate": -1205.9,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.035134353289772,
+          "tool": "spectrum",
+          "truth": -1164.969548317584,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 2.043898106626077e-14,
+          "estimate": 3.65816e-11,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.000559035339596468,
+          "tool": "spectrum",
+          "truth": 3.6561161018933737e-11,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.10009825272229278,
+          "estimate": 0.5996099996099995,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.2003921896651521,
+          "tool": "spectrum",
+          "truth": 0.4995117468877067,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 2.0,
+          "estimate": 41,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.05128205128205128,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -14.0,
+          "estimate": 25,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.358974358974359,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.0605399893643354e-05,
+          "estimate": 0.0146814,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0027581432549900232,
+          "tool": "amplitude_histogram",
+          "truth": 0.014722005399893644,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.025641025640652515,
+          "estimate": 25641.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 25641.02564102564,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 4.64073,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.09745227522302116,
+        "cfo_hz": -1164.969548317584,
+        "rrc_beta": 0.4995117468877067,
+        "snr_db": 24.145429129527276,
+        "sps": 39,
+        "symbol_rate_hz": 25641.02564102564
+      }
+    },
+    {
+      "capture_id": "166fffe86f3a",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.7142857142857143,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.5039095039095038,
+      "manifest_sha256": "58b93043b23c561647e630a40b572ddf41d550bf7cece56ae77cff186ce82d86",
+      "measurements": [
+        {
+          "absolute_error": 4076.361482306522,
+          "estimate": 42968.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.104811157069826,
+          "tool": "spectrum",
+          "truth": 38892.43851769348,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 172.35159277198977,
+          "estimate": -1919.32,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.08239897380046199,
+          "tool": "spectrum",
+          "truth": -2091.6715927719897,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -3.442819222915565e-11,
+          "estimate": 1.46365e-08,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.0023466948906062705,
+          "tool": "spectrum",
+          "truth": 1.4670928192229156e-08,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.14267415579023196,
+          "estimate": 0.5039095039095038,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.3949617791643251,
+          "tool": "spectrum",
+          "truth": 0.3612353481192719,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 34,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.02857142857142857,
+          "tool": "symbol_period_statistic",
+          "truth": 35.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 25,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2857142857142857,
+          "tool": "symbol_period_statistic",
+          "truth": 35.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.00015441149078596061,
+          "estimate": 0.157149,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0009816156517050824,
+          "tool": "amplitude_histogram",
+          "truth": 0.15730341149078597,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.028571428571012802,
+          "estimate": 28571.4,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 28571.428571428572,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 4.2002,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.7544436143782614,
+        "cfo_hz": -2091.6715927719897,
+        "rrc_beta": 0.3612353481192719,
+        "snr_db": 15.888241446865608,
+        "sps": 35,
+        "symbol_rate_hz": 28571.428571428572
+      }
+    },
+    {
+      "capture_id": "29dea5e934c5",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.6,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.4648450000000002,
+      "manifest_sha256": "fc385996c6da41ec7d23c54e2b1840f7a8fc3cc2afe07ae30a4b2be3a579a9ab",
+      "measurements": [
+        {
+          "absolute_error": 684.3462311848562,
+          "estimate": 58593.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.01181752178006873,
+          "tool": "spectrum",
+          "truth": 57909.45376881515,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -25.351498663024188,
+          "estimate": 506.988,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.04762280222807949,
+          "tool": "spectrum",
+          "truth": 532.3394986630242,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.899159614387418e-12,
+          "estimate": 4.14433e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.004603645636954763,
+          "tool": "spectrum",
+          "truth": 4.125338403856126e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.017108655779621396,
+          "estimate": 0.4648450000000002,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.03821145189678951,
+          "tool": "spectrum",
+          "truth": 0.4477363442203788,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 24,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.04,
+          "tool": "symbol_period_statistic",
+          "truth": 25.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 15,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.4,
+          "tool": "symbol_period_statistic",
+          "truth": 25.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 4.104153956886736e-06,
+          "estimate": 0.0525145,
+          "quantity": "rms_magnitude",
+          "relative_error": 7.815888436491384e-05,
+          "tool": "amplitude_histogram",
+          "truth": 0.05251039584604311,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 40000.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 40000.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 4.64757,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.33264160389256814,
+        "cfo_hz": 532.3394986630242,
+        "rrc_beta": 0.4477363442203788,
+        "snr_db": 24.283818571005696,
+        "sps": 25,
+        "symbol_rate_hz": 40000.0
+      }
+    },
+    {
+      "capture_id": "2a81e25f7c07",
+      "envelope_null_lag_error": -4,
+      "envelope_null_period_fraction": 0.6363636363636364,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.2675738732426125,
+      "manifest_sha256": "128a4af4f779ebd8e8ed062229d51bcf742584af82ea9b0ba9a3b139f8440d94",
+      "measurements": [
+        {
+          "absolute_error": -16163.274879005126,
+          "estimate": 115234.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.12301073134042387,
+          "tool": "spectrum",
+          "truth": 131397.27487900513,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 148.50203939956282,
+          "estimate": 2347.04,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.0675458154741189,
+          "tool": "spectrum",
+          "truth": 2198.537960600437,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.543337228446551e-11,
+          "estimate": 1.64757e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.021979137298478287,
+          "tool": "spectrum",
+          "truth": 1.6121366277155344e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.17779615042644376,
+          "estimate": 0.2675738732426125,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.399209962452614,
+          "tool": "spectrum",
+          "truth": 0.44537002366905626,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 11,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 11.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.0,
+          "estimate": 7,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.36363636363636365,
+          "tool": "symbol_period_statistic",
+          "truth": 11.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.00023955749541412774,
+          "estimate": 0.0747495,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.00321510777436694,
+          "tool": "amplitude_histogram",
+          "truth": 0.07450994250458587,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.009090909094084054,
+          "estimate": 90909.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.0000000003492459e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 90909.09090909091,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.95502,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.30610548764587764,
+        "cfo_hz": 2198.537960600437,
+        "rrc_beta": 0.44537002366905626,
+        "snr_db": 17.643066343102596,
+        "sps": 11,
+        "symbol_rate_hz": 90909.09090909091
+      }
+    },
+    {
+      "capture_id": "39f2b094c31e",
+      "envelope_null_lag_error": -11,
+      "envelope_null_period_fraction": 0.7027027027027027,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.58984718984719,
+      "manifest_sha256": "1d2663353e54607f2c31207f91c4b4ce3f04aadc13726de3f86198382c487542",
+      "measurements": [
+        {
+          "absolute_error": 8736.480720226558,
+          "estimate": 42968.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.25521147570590136,
+          "tool": "spectrum",
+          "truth": 34232.319279773445,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 6.76711363234358,
+          "estimate": 1561.57,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.004352393278708768,
+          "tool": "spectrum",
+          "truth": 1554.8028863676564,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 2.8340821799092717e-13,
+          "estimate": 4.98442e-11,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.005718395687411241,
+          "tool": "spectrum",
+          "truth": 4.9560791782009073e-11,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.3232513764955725,
+          "estimate": 0.58984718984719,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 1.2125148269647847,
+          "tool": "spectrum",
+          "truth": 0.26659581335161747,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 36,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.02702702702702703,
+          "tool": "symbol_period_statistic",
+          "truth": 37.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -11.0,
+          "estimate": 26,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2972972972972973,
+          "tool": "symbol_period_statistic",
+          "truth": 37.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 1.1560473489971926e-05,
+          "estimate": 0.0115515,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0010017793822415383,
+          "tool": "amplitude_histogram",
+          "truth": 0.011539939526510027,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.027027027026633732,
+          "estimate": 27027.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 27027.027027027027,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 7.36657,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.06344160775076238,
+        "cfo_hz": 1554.8028863676564,
+        "rrc_beta": 0.26659581335161747,
+        "snr_db": 19.09337247157275,
+        "sps": 37,
+        "symbol_rate_hz": 27027.027027027027
+      }
+    },
+    {
+      "capture_id": "3b80a5ec6654",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.696969696969697,
+      "first_null_lag_error": 4,
+      "implied_beta": 0.4824241824241824,
+      "manifest_sha256": "d30cceb1c867a477545a6feeb067edf73a6378e34df275b2fe1eabfd214c2d63",
+      "measurements": [
+        {
+          "absolute_error": 4524.5924252507975,
+          "estimate": 44921.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.11200232631540388,
+          "tool": "spectrum",
+          "truth": 40397.307574749204,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 68.4464869209828,
+          "estimate": -1489.97,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.04392053568184131,
+          "tool": "spectrum",
+          "truth": -1558.4164869209828,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.806361653512257e-12,
+          "estimate": 1.27937e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.002984062526622694,
+          "tool": "spectrum",
+          "truth": 1.2755636383464878e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.14931303245745853,
+          "estimate": 0.4824241824241824,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.4482378703696173,
+          "tool": "spectrum",
+          "truth": 0.33311114996672386,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 4.0,
+          "estimate": 37,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.12121212121212122,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 23,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.30303030303030304,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 2.134471982849495e-05,
+          "estimate": 0.0636073,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0003356829308366314,
+          "tool": "amplitude_histogram",
+          "truth": 0.06358595528017151,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.030303030303912237,
+          "estimate": 30303.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -1.0000000000291038e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 30303.030303030304,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.92287,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.43936293454687525,
+        "cfo_hz": -1558.4164869209828,
+        "rrc_beta": 0.33311114996672386,
+        "snr_db": 21.798983367340806,
+        "sps": 33,
+        "symbol_rate_hz": 30303.030303030304
+      }
+    },
+    {
+      "capture_id": "3f94f9047ee6",
+      "envelope_null_lag_error": -9,
+      "envelope_null_period_fraction": 0.7352941176470589,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.5273427671886795,
+      "manifest_sha256": "575090abdcc7e9c5fe06b9a797b2c69d99b76673b059dda61b0dd3fda913c547",
+      "measurements": [
+        {
+          "absolute_error": 6846.081311589274,
+          "estimate": 44921.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.179801289832096,
+          "tool": "spectrum",
+          "truth": 38075.81868841073,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -13.532385040357212,
+          "estimate": -447.623,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.03117410184418595,
+          "tool": "spectrum",
+          "truth": -434.0906149596428,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 2.1181633210604298e-12,
+          "estimate": 5.92523e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.0035876456110610776,
+          "tool": "spectrum",
+          "truth": 5.904048366789395e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.23276493178271473,
+          "estimate": 0.5273427671886795,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.7901644448637347,
+          "tool": "spectrum",
+          "truth": 0.2945778354059647,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 33,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.029411764705882353,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -9.0,
+          "estimate": 25,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2647058823529412,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 7.67467696374119e-06,
+          "estimate": 0.060269,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.00012735659102418328,
+          "tool": "amplitude_histogram",
+          "truth": 0.06026132532303626,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03529411764611723,
+          "estimate": 29411.8,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.1999999999679857e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 29411.764705882353,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 5.55195,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.3933084056946593,
+        "cfo_hz": -434.0906149596428,
+        "rrc_beta": 0.2945778354059647,
+        "snr_db": 24.182249631203607,
+        "sps": 34,
+        "symbol_rate_hz": 29411.764705882353
+      }
+    },
+    {
+      "capture_id": "4179caf1a7d5",
+      "envelope_null_lag_error": -7,
+      "envelope_null_period_fraction": 0.7741935483870968,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.5136694349636215,
+      "manifest_sha256": "953256812cc822b160b0c8f7f6ee209b380d16835231ebc285347bc3a828b8cb",
+      "measurements": [
+        {
+          "absolute_error": 6202.842705760129,
+          "estimate": 48828.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.14552035810463826,
+          "tool": "spectrum",
+          "truth": 42625.25729423987,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -47.48288300512877,
+          "estimate": 2638.03,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.017681122777558497,
+          "tool": "spectrum",
+          "truth": 2685.512883005129,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.9026052026046356e-12,
+          "estimate": 2.08444e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.019079781901703997,
+          "tool": "spectrum",
+          "truth": 2.0454139479739535e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.1922864588421856,
+          "estimate": 0.5136694349636215,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.5983094100464406,
+          "tool": "spectrum",
+          "truth": 0.3213829761214359,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 32,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.03225806451612903,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -7.0,
+          "estimate": 24,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.22580645161290322,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 6.828536012637443e-06,
+          "estimate": 0.0192666,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0003545491713339223,
+          "tool": "amplitude_histogram",
+          "truth": 0.01925977146398736,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03548387096452643,
+          "estimate": 32258.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.0999999999003193e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 32258.064516129034,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.14342,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.09458187820918118,
+        "cfo_hz": 2685.512883005129,
+        "rrc_beta": 0.3213829761214359,
+        "snr_db": 16.40594756771969,
+        "sps": 31,
+        "symbol_rate_hz": 32258.064516129034
+      }
+    },
+    {
+      "capture_id": "42322cd4a2f2",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.696969696969697,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.5468765468765469,
+      "manifest_sha256": "6f4c2f7787a0641313843d6b513991a583927ffea343e958c2f348cd7f7b9a55",
+      "measurements": [
+        {
+          "absolute_error": 3549.232085371339,
+          "estimate": 46875.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.08191965788961733,
+          "tool": "spectrum",
+          "truth": 43325.76791462866,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -94.0992065074438,
+          "estimate": 1348.26,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.06523978637422603,
+          "tool": "spectrum",
+          "truth": 1442.3592065074438,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 6.895431446672984e-13,
+          "estimate": 1.58695e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.004364046396819277,
+          "tool": "spectrum",
+          "truth": 1.580054568553327e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.11712620569380117,
+          "estimate": 0.5468765468765469,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.27254476487778934,
+          "tool": "spectrum",
+          "truth": 0.4297503411827457,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 33,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 23,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.30303030303030304,
+          "tool": "symbol_period_statistic",
+          "truth": 33.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 1.907641682427283e-05,
+          "estimate": 0.026158,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0007298088141835852,
+          "tool": "amplitude_histogram",
+          "truth": 0.026138923583175728,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.030303030303912237,
+          "estimate": 30303.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -1.0000000000291038e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 30303.030303030304,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 7.32753,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.15226791469725756,
+        "cfo_hz": 1442.3592065074438,
+        "rrc_beta": 0.4297503411827457,
+        "snr_db": 21.666986173160197,
+        "sps": 33,
+        "symbol_rate_hz": 30303.030303030304
+      }
+    },
+    {
+      "capture_id": "52533dee384a",
+      "envelope_null_lag_error": -6,
+      "envelope_null_period_fraction": 0.8,
+      "first_null_lag_error": 2,
+      "implied_beta": 0.46484446484446473,
+      "manifest_sha256": "a63cb6a3d454a18d575f607258039c66b9e16c737d8c986f2b96ee34eb9a6bf2",
+      "measurements": [
+        {
+          "absolute_error": 7823.794603540853,
+          "estimate": 48828.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.1908042223345762,
+          "tool": "spectrum",
+          "truth": 41004.305396459145,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -61.23758848712805,
+          "estimate": -2766.4,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.02263730570353471,
+          "tool": "spectrum",
+          "truth": -2705.162411512872,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 5.0887425732592533e-11,
+          "estimate": 3.23208e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.015996336136397317,
+          "tool": "spectrum",
+          "truth": 3.1811925742674073e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.23471530295069057,
+          "estimate": 0.46484446484446473,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 1.0199285523797863,
+          "tool": "spectrum",
+          "truth": 0.23012916189377416,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 2.0,
+          "estimate": 32,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.06666666666666667,
+          "tool": "symbol_period_statistic",
+          "truth": 30.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -6.0,
+          "estimate": 24,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2,
+          "tool": "symbol_period_statistic",
+          "truth": 30.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.00027988812218054937,
+          "estimate": 0.113034,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0024822874972740385,
+          "tool": "amplitude_histogram",
+          "truth": 0.11275411187781945,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03333333333284827,
+          "estimate": 33333.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.99999999985448e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 33333.333333333336,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.74853,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.6905305521122188,
+        "cfo_hz": -2705.162411512872,
+        "rrc_beta": 0.23012916189377416,
+        "snr_db": 21.757192120861237,
+        "sps": 30,
+        "symbol_rate_hz": 33333.333333333336
+      }
+    },
+    {
+      "capture_id": "6461af48216a",
+      "envelope_null_lag_error": -19,
+      "envelope_null_period_fraction": 0.4411764705882353,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.5273427671886795,
+      "manifest_sha256": "89e120da7207605ccb367426b96c04ff7b3ef3e7f2b1fb74ddd519f4fcddb354",
+      "measurements": [
+        {
+          "absolute_error": 5626.270722021734,
+          "estimate": 44921.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.14317802833036097,
+          "tool": "spectrum",
+          "truth": 39295.62927797827,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 7.079415028079097,
+          "estimate": -948.725,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.007406761170768521,
+          "tool": "spectrum",
+          "truth": -955.8044150280791,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -3.4139897438518205e-12,
+          "estimate": 9.62686e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.003533785094808864,
+          "tool": "spectrum",
+          "truth": 9.66099989743852e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.19129137173741834,
+          "estimate": 0.5273427671886795,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.5692324874311141,
+          "tool": "spectrum",
+          "truth": 0.3360513954512611,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 35,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.029411764705882353,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -19.0,
+          "estimate": 15,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.5588235294117647,
+          "tool": "symbol_period_statistic",
+          "truth": 34.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 7.765268851443047e-05,
+          "estimate": 0.0544485,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.001428204494764729,
+          "tool": "amplitude_histogram",
+          "truth": 0.054370847311485566,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03529411764611723,
+          "estimate": 29411.8,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.1999999999679857e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 29411.764705882353,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 6.11431,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.26824586956110874,
+        "cfo_hz": -955.8044150280791,
+        "rrc_beta": 0.3360513954512611,
+        "snr_db": 18.720588361716107,
+        "sps": 34,
+        "symbol_rate_hz": 29411.764705882353
+      }
+    },
+    {
+      "capture_id": "66ea994f0cb5",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.7435897435897436,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.5996099996099995,
+      "manifest_sha256": "35b81524432900fe4be7680baf3dee6c3cb5c7f1368414c98ed230cb77298678",
+      "measurements": [
+        {
+          "absolute_error": 8224.818380531193,
+          "estimate": 41015.6,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.25082715245945486,
+          "tool": "spectrum",
+          "truth": 32790.781619468806,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 143.9478564096957,
+          "estimate": 530.312,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.3725704333535055,
+          "tool": "spectrum",
+          "truth": 386.3641435903043,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.0211100738782352e-12,
+          "estimate": 7.15585e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.00014271621160862993,
+          "tool": "spectrum",
+          "truth": 7.154828889926122e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.3207695164507161,
+          "estimate": 0.5996099996099995,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 1.1503692463030248,
+          "tool": "spectrum",
+          "truth": 0.2788404831592834,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 39,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 29,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2564102564102564,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.0002550266936692108,
+          "estimate": 0.108688,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.002351929361456708,
+          "tool": "amplitude_histogram",
+          "truth": 0.1084329733063308,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.025641025640652515,
+          "estimate": 25641.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 25641.02564102564,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.72977,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.6094304904808914,
+        "cfo_hz": 386.3641435903043,
+        "rrc_beta": 0.2788404831592834,
+        "snr_db": 17.146532489117504,
+        "sps": 39,
+        "symbol_rate_hz": 25641.02564102564
+      }
+    },
+    {
+      "capture_id": "6c5de1b11336",
+      "envelope_null_lag_error": -6,
+      "envelope_null_period_fraction": 0.7391304347826086,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.302732627540635,
+      "manifest_sha256": "42dbcb3f74d846bb69a06991a1e646e08b01647cada2e19f88ae4b1b01a335da",
+      "measurements": [
+        {
+          "absolute_error": 3875.602526631388,
+          "estimate": 56640.6,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.07345025513528113,
+          "tool": "spectrum",
+          "truth": 52764.99747336861,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 135.70769068029767,
+          "estimate": -2605.89,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.04949949116955351,
+          "tool": "spectrum",
+          "truth": -2741.5976906802975,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.0539822481283245e-12,
+          "estimate": 2.22472e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.013918557279019413,
+          "tool": "spectrum",
+          "truth": 2.1941801775187168e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.08913768565315686,
+          "estimate": 0.302732627540635,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.41732114471191273,
+          "tool": "spectrum",
+          "truth": 0.21359494188747816,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 22,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.043478260869565216,
+          "tool": "symbol_period_statistic",
+          "truth": 23.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -6.0,
+          "estimate": 17,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2608695652173913,
+          "tool": "symbol_period_statistic",
+          "truth": 23.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 2.3029209348150725e-05,
+          "estimate": 0.0266998,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.000863268254200418,
+          "tool": "amplitude_histogram",
+          "truth": 0.02667677079065185,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03913043478678446,
+          "estimate": 43478.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 9.000000000960427e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 43478.260869565216,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.41011,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.14384269811773362,
+        "cfo_hz": -2741.5976906802975,
+        "rrc_beta": 0.21359494188747816,
+        "snr_db": 19.747535989336974,
+        "sps": 23,
+        "symbol_rate_hz": 43478.260869565216
+      }
+    },
+    {
+      "capture_id": "70f0b1dcf97d",
+      "envelope_null_lag_error": -7,
+      "envelope_null_period_fraction": 0.6956521739130435,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.34765618710943147,
+      "manifest_sha256": "d102cbf7ee0e758c450bf56735b66706458c0b4ea43eb0b57632694251fab6fe",
+      "measurements": [
+        {
+          "absolute_error": 4502.877848776836,
+          "estimate": 58593.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.08324646113793442,
+          "tool": "spectrum",
+          "truth": 54090.92215122317,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 80.10751498632453,
+          "estimate": 1975.97,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.04225386367395032,
+          "tool": "spectrum",
+          "truth": 1895.8624850136755,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 4.4724402479064414e-12,
+          "estimate": 9.61731e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.004672133983387616,
+          "tool": "spectrum",
+          "truth": 9.572585597520936e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.10356497763129863,
+          "estimate": 0.34765618710943147,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.42428802681063615,
+          "tool": "spectrum",
+          "truth": 0.24409120947813284,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 22,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.043478260869565216,
+          "tool": "symbol_period_statistic",
+          "truth": 23.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -7.0,
+          "estimate": 16,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.30434782608695654,
+          "tool": "symbol_period_statistic",
+          "truth": 23.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 2.0119426207151903e-05,
+          "estimate": 0.0853251,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.00023585289008708755,
+          "tool": "amplitude_histogram",
+          "truth": 0.08530498057379285,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03913043478678446,
+          "estimate": 43478.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 9.000000000960427e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 43478.260869565216,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.89557,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.5291276453481486,
+        "cfo_hz": 1895.8624850136755,
+        "rrc_beta": 0.24409120947813284,
+        "snr_db": 24.66461139836303,
+        "sps": 23,
+        "symbol_rate_hz": 43478.260869565216
+      }
+    },
+    {
+      "capture_id": "761b96df8338",
+      "envelope_null_lag_error": -2,
+      "envelope_null_period_fraction": 0.8,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.15233999999999992,
+      "manifest_sha256": "7bd40a2aff6d36a825322953eb46422adc4da3b90fa64045779f18ed4bad8f40",
+      "measurements": [
+        {
+          "absolute_error": -9053.201282596841,
+          "estimate": 115234.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.07284097790577979,
+          "tool": "spectrum",
+          "truth": 124287.20128259684,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 57.35595949569688,
+          "estimate": -6088.63,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.009332263346140669,
+          "tool": "spectrum",
+          "truth": -6145.985959495697,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.931880162820564e-12,
+          "estimate": 1.3287e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.014754146196866448,
+          "tool": "spectrum",
+          "truth": 1.3093811983717944e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.09053201282596862,
+          "estimate": 0.15233999999999992,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.3727560527562305,
+          "tool": "spectrum",
+          "truth": 0.24287201282596854,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 10,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 10.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -2.0,
+          "estimate": 8,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2,
+          "tool": "symbol_period_statistic",
+          "truth": 10.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 6.611793003549055e-05,
+          "estimate": 0.0354385,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0018691964229243351,
+          "tool": "amplitude_histogram",
+          "truth": 0.03537238206996451,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 100000.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 100000.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.66337,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.16605992262398475,
+        "cfo_hz": -6145.985959495697,
+        "rrc_beta": 0.24287201282596854,
+        "snr_db": 23.231416210387167,
+        "sps": 10,
+        "symbol_rate_hz": 100000.0
+      }
+    },
+    {
+      "capture_id": "7623cd8ef788",
+      "envelope_null_lag_error": -4,
+      "envelope_null_period_fraction": 0.6666666666666666,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.28906451562580626,
+      "manifest_sha256": "a18b38d31e7676ffd954abddec96a421e89f9067a43a3817c5efcb52612e9224",
+      "measurements": [
+        {
+          "absolute_error": -14123.963779819896,
+          "estimate": 107422.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.11620265569168063,
+          "tool": "spectrum",
+          "truth": 121545.9637798199,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 25.19847369578656,
+          "estimate": 2402.44,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.010599879489300967,
+          "tool": "spectrum",
+          "truth": 2377.2415263042135,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 8.215579957206282e-12,
+          "estimate": 3.69276e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.02275403090771498,
+          "tool": "spectrum",
+          "truth": 3.610604200427937e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.1694870497320325,
+          "estimate": 0.28906451562580626,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.36961393774715456,
+          "tool": "spectrum",
+          "truth": 0.45855156535783875,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 12,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 12.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.0,
+          "estimate": 8,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.3333333333333333,
+          "tool": "symbol_period_statistic",
+          "truth": 12.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.17260994182711e-05,
+          "estimate": 0.0597736,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0006975820770235156,
+          "tool": "amplitude_histogram",
+          "truth": 0.059815326099418274,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03333333332557231,
+          "estimate": 83333.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -3.9999999990686776e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 83333.33333333333,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 6.01088,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.2736314505072801,
+        "cfo_hz": 2377.2415263042135,
+        "rrc_beta": 0.45855156535783875,
+        "snr_db": 23.166189609081243,
+        "sps": 12,
+        "symbol_rate_hz": 83333.33333333333
+      }
+    },
+    {
+      "capture_id": "774cb0de3654",
+      "envelope_null_lag_error": -7,
+      "envelope_null_period_fraction": 0.7083333333333334,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.3593733125013501,
+      "manifest_sha256": "6523453ee8893bb6254dd3fb9aa4bfb4f6c86d944f69456dd8aba3368e857dd5",
+      "measurements": [
+        {
+          "absolute_error": 11.558964178082533,
+          "estimate": 56640.6,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.00020411725091319598,
+          "tool": "spectrum",
+          "truth": 56629.041035821916,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -51.58940708211958,
+          "estimate": -2897.22,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.01812934089565727,
+          "tool": "spectrum",
+          "truth": -2845.63059291788,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 2.5453727251626933e-13,
+          "estimate": 3.86287e-11,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.006633037815675095,
+          "tool": "spectrum",
+          "truth": 3.837416272748373e-11,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.00027632764162410783,
+          "estimate": 0.3593733125013501,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.0007695069946968496,
+          "tool": "spectrum",
+          "truth": 0.35909698485972597,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 23,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.041666666666666664,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -7.0,
+          "estimate": 17,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2916666666666667,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 1.6677111827980567e-05,
+          "estimate": 0.0182632,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0009139884859263353,
+          "tool": "amplitude_histogram",
+          "truth": 0.01824652288817202,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03333333333284827,
+          "estimate": 41666.7,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 7.999999999883586e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 41666.666666666664,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.23096,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.10193287702046923,
+        "cfo_hz": -2845.63059291788,
+        "rrc_beta": 0.35909698485972597,
+        "snr_db": 24.326595661271778,
+        "sps": 24,
+        "symbol_rate_hz": 41666.666666666664
+      }
+    },
+    {
+      "capture_id": "8df48968854d",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.8148148148148148,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.47656397656397664,
+      "manifest_sha256": "58ec20fea096adc77bdba5cba3d51b9449c8188da95d481536fdddee7d1b1ace",
+      "measurements": [
+        {
+          "absolute_error": 3015.1434077930535,
+          "estimate": 54687.5,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.05835118826857971,
+          "tool": "spectrum",
+          "truth": 51672.35659220695,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -5.801221624111122,
+          "estimate": -1069.52,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.005453717412950597,
+          "tool": "spectrum",
+          "truth": -1063.7187783758889,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -6.258205459293383e-11,
+          "estimate": 7.47218e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.008305777161839629,
+          "tool": "spectrum",
+          "truth": 7.534762054592934e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.08141034857438922,
+          "estimate": 0.47656397656397664,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.2060220198118349,
+          "tool": "spectrum",
+          "truth": 0.3951536279895874,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 27,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 27.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 22,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.18518518518518517,
+          "tool": "symbol_period_statistic",
+          "truth": 27.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.0002536036204548314,
+          "estimate": 0.122292,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0020694632280753716,
+          "tool": "amplitude_histogram",
+          "truth": 0.12254560362045483,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03703703703649808,
+          "estimate": 37037.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 37037.03703703704,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 4.10546,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.5020293472564646,
+        "cfo_hz": -1063.7187783758889,
+        "rrc_beta": 0.3951536279895874,
+        "snr_db": 15.242823019591498,
+        "sps": 27,
+        "symbol_rate_hz": 37037.03703703704
+      }
+    },
+    {
+      "capture_id": "9e0d569e135b",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.6666666666666666,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.3183583408208297,
+      "manifest_sha256": "477b3f70bf687ce6269895251f1d314a95f2d5ad16a758120245eb4a1bfaaa83",
+      "measurements": [
+        {
+          "absolute_error": -6469.32420967576,
+          "estimate": 87890.6,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.06856008272431814,
+          "tool": "spectrum",
+          "truth": 94359.92420967577,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -12.743511463585037,
+          "estimate": 2923.23,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.004340472219462357,
+          "tool": "spectrum",
+          "truth": 2935.973511463585,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 8.237216388249018e-11,
+          "estimate": 7.76212e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.010725894344485842,
+          "tool": "spectrum",
+          "truth": 7.67974783611751e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.09704052232430677,
+          "estimate": 0.3183583408208297,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.23360805946741775,
+          "tool": "spectrum",
+          "truth": 0.41539886314513647,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 15,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 15.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 10,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.3333333333333333,
+          "tool": "symbol_period_statistic",
+          "truth": 15.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 5.186820574701323e-05,
+          "estimate": 0.196941,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0002634386432320446,
+          "tool": "amplitude_histogram",
+          "truth": 0.196889131794253,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03333333332557231,
+          "estimate": 66666.7,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 4.999999998835846e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 66666.66666666667,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 5.59055,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.8952973909038126,
+        "cfo_hz": 2935.973511463585,
+        "rrc_beta": 0.41539886314513647,
+        "snr_db": 20.184419234772758,
+        "sps": 15,
+        "symbol_rate_hz": 66666.66666666667
+      }
+    },
+    {
+      "capture_id": "aa86ced2cac8",
+      "envelope_null_lag_error": -7,
+      "envelope_null_period_fraction": 0.7307692307692307,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.3710957710957712,
+      "manifest_sha256": "9b98bc7b917af5aafb0022cf6cb7ab8a95546063f5e930e8caf6f3dec6a29b9a",
+      "measurements": [
+        {
+          "absolute_error": 2122.6500344474407,
+          "estimate": 52734.4,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.0419398664518054,
+          "tool": "spectrum",
+          "truth": 50611.74996555256,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -6.902431234445544,
+          "estimate": -914.552,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.007604731464625903,
+          "tool": "spectrum",
+          "truth": -907.6495687655545,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.362469095176574e-11,
+          "estimate": 5.70663e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.005927138988947462,
+          "tool": "spectrum",
+          "truth": 5.673005309048234e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.05519027199140464,
+          "estimate": 0.3710957710957712,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.17470500560413252,
+          "tool": "spectrum",
+          "truth": 0.31590549910436655,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 25,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.038461538461538464,
+          "tool": "symbol_period_statistic",
+          "truth": 26.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -7.0,
+          "estimate": 19,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2692307692307692,
+          "tool": "symbol_period_statistic",
+          "truth": 26.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 7.951685042636991e-05,
+          "estimate": 0.15931,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0004993820834649828,
+          "tool": "amplitude_histogram",
+          "truth": 0.15923048314957364,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03846153846097877,
+          "estimate": 38461.5,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 38461.53846153846,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.7156,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.838456155763107,
+        "cfo_hz": -907.6495687655545,
+        "rrc_beta": 0.31590549910436655,
+        "snr_db": 20.932721847782854,
+        "sps": 26,
+        "symbol_rate_hz": 38461.53846153846
+      }
+    },
+    {
+      "capture_id": "aab9a759d980",
+      "envelope_null_lag_error": -15,
+      "envelope_null_period_fraction": 0.6153846153846154,
+      "first_null_lag_error": 3,
+      "implied_beta": 0.6757848757848759,
+      "manifest_sha256": "1128c16fb1c46fafb7db5fc7becf69834644cbcc804c99d4a68d48e5ed7643c8",
+      "measurements": [
+        {
+          "absolute_error": 5407.033172021773,
+          "estimate": 42968.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.14395044825192552,
+          "tool": "spectrum",
+          "truth": 37561.76682797823,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -39.4521430409377,
+          "estimate": 1863.81,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.02072869635178212,
+          "tool": "spectrum",
+          "truth": 1903.2621430409376,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.936651501615607e-11,
+          "estimate": 2.5827e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.007555206971549443,
+          "tool": "spectrum",
+          "truth": 2.563333484983844e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.21087596949372506,
+          "estimate": 0.6757848757848759,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.45358556620479806,
+          "tool": "spectrum",
+          "truth": 0.46490890629115084,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 3.0,
+          "estimate": 42,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.07692307692307693,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -15.0,
+          "estimate": 24,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.38461538461538464,
+          "tool": "symbol_period_statistic",
+          "truth": 39.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 5.0124694179712326e-05,
+          "estimate": 0.0649228,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.000772662664880343,
+          "tool": "amplitude_histogram",
+          "truth": 0.06487267530582029,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.025641025640652515,
+          "estimate": 25641.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 25641.02564102564,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.49878,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.30602260522510333,
+        "cfo_hz": 1903.2621430409376,
+        "rrc_beta": 0.46490890629115084,
+        "snr_db": 15.626692616444236,
+        "sps": 39,
+        "symbol_rate_hz": 25641.02564102564
+      }
+    },
+    {
+      "capture_id": "ac184aba13fb",
+      "envelope_null_lag_error": -9,
+      "envelope_null_period_fraction": 0.625,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.4531244375004502,
+      "manifest_sha256": "b1b4b3fe433d5883302e6d10b001c69f9e6c3e6a197e65758e680076a83391a7",
+      "measurements": [
+        {
+          "absolute_error": -228.77614034307044,
+          "estimate": 60546.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.003764271413694864,
+          "tool": "spectrum",
+          "truth": 60775.67614034307,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 42.01923095227585,
+          "estimate": 1206.16,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.03609463053737727,
+          "tool": "spectrum",
+          "truth": 1164.1407690477242,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -1.255161055239934e-11,
+          "estimate": 4.44764e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.0028141415545250106,
+          "tool": "spectrum",
+          "truth": 4.460191610552399e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.005491789867783481,
+          "estimate": 0.4531244375004502,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.011974695922335942,
+          "tool": "spectrum",
+          "truth": 0.45861622736823365,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 23,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.041666666666666664,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -9.0,
+          "estimate": 15,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.375,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.0004774803952158624,
+          "estimate": 0.116754,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0040729707891272865,
+          "tool": "amplitude_histogram",
+          "truth": 0.11723148039521586,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03333333333284827,
+          "estimate": 41666.7,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 7.999999999883586e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 41666.666666666664,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 5.15721,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.6132143062529709,
+        "cfo_hz": 1164.1407690477242,
+        "rrc_beta": 0.45861622736823365,
+        "snr_db": 19.2587765493889,
+        "sps": 24,
+        "symbol_rate_hz": 41666.666666666664
+      }
+    },
+    {
+      "capture_id": "af6f7f45bbfa",
+      "envelope_null_lag_error": -8,
+      "envelope_null_period_fraction": 0.68,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.31836,
+      "manifest_sha256": "7cf4c7413719340d0006fe716821f5185cd234301431d6cc6573716da35047d7",
+      "measurements": [
+        {
+          "absolute_error": 3594.9660671049496,
+          "estimate": 52734.4,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.07315847537060043,
+          "tool": "spectrum",
+          "truth": 49139.43393289505,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -48.45552934852367,
+          "estimate": 2862.72,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.01664466084577431,
+          "tool": "spectrum",
+          "truth": 2911.1755293485235,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -7.357442092129642e-12,
+          "estimate": 1.89186e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.0038739335102277025,
+          "tool": "spectrum",
+          "truth": 1.8992174420921298e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.08987415167762364,
+          "estimate": 0.31836,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.3933466879349918,
+          "tool": "spectrum",
+          "truth": 0.22848584832237634,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 25,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 25.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -8.0,
+          "estimate": 17,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.32,
+          "tool": "symbol_period_statistic",
+          "truth": 25.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.00014733720403020678,
+          "estimate": 0.134662,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0010953244870686406,
+          "tool": "amplitude_histogram",
+          "truth": 0.1345146627959698,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 40000.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 40000.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.9594,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.7222503778427639,
+        "cfo_hz": 2911.1755293485235,
+        "rrc_beta": 0.22848584832237634,
+        "snr_db": 24.393172656577832,
+        "sps": 25,
+        "symbol_rate_hz": 40000.0
+      }
+    },
+    {
+      "capture_id": "b0aa94ca4a9f",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.84375,
+      "first_null_lag_error": 2,
+      "implied_beta": 0.4375008,
+      "manifest_sha256": "eea8b224c8e1a27454a3e563d42602749215f2c32c72b8eb91aed5d7f585d2ea",
+      "measurements": [
+        {
+          "absolute_error": 7247.101510134264,
+          "estimate": 44921.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.19235939674856348,
+          "tool": "spectrum",
+          "truth": 37674.79848986574,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -25.002707481609605,
+          "estimate": 1000.76,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.024374747979476398,
+          "tool": "spectrum",
+          "truth": 1025.7627074816096,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -1.5937852890582636e-11,
+          "estimate": 1.76821e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.00893303369715742,
+          "tool": "spectrum",
+          "truth": 1.7841478528905827e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.2319072483242963,
+          "estimate": 0.4375008,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 1.1279889200518258,
+          "tool": "spectrum",
+          "truth": 0.20559355167570373,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 2.0,
+          "estimate": 34,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0625,
+          "tool": "symbol_period_statistic",
+          "truth": 32.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 27,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.15625,
+          "tool": "symbol_period_statistic",
+          "truth": 32.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.0001028476907703954,
+          "estimate": 0.0592288,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0017334372931361276,
+          "tool": "amplitude_histogram",
+          "truth": 0.059331647690770394,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 31250.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 31250.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 1.50488,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.3419288787372779,
+        "cfo_hz": 1025.7627074816096,
+        "rrc_beta": 0.20559355167570373,
+        "snr_db": 18.16737400184062,
+        "sps": 32,
+        "symbol_rate_hz": 31250.0
+      }
+    },
+    {
+      "capture_id": "c0f7a7ad4349",
+      "envelope_null_lag_error": -4,
+      "envelope_null_period_fraction": 0.6,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.26953000000000005,
+      "manifest_sha256": "c29ed35d20c5b49122971a68dad75e51c1d8451adf37a92fd937911a7dedb95b",
+      "measurements": [
+        {
+          "absolute_error": -14932.6372835582,
+          "estimate": 126953.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.10524417812435342,
+          "tool": "spectrum",
+          "truth": 141885.6372835582,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 80.80593972327733,
+          "estimate": -8959.59,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.008938318660161556,
+          "tool": "spectrum",
+          "truth": -9040.395939723277,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 2.691951833536155e-11,
+          "estimate": 1.03474e-08,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.002608359018089008,
+          "tool": "spectrum",
+          "truth": 1.0320480481664639e-08,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.14932637283558203,
+          "estimate": 0.26953000000000005,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.3565097310676436,
+          "tool": "spectrum",
+          "truth": 0.4188563728355821,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 11,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.1,
+          "tool": "symbol_period_statistic",
+          "truth": 10.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.0,
+          "estimate": 6,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.4,
+          "tool": "symbol_period_statistic",
+          "truth": 10.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.35782467889112e-05,
+          "estimate": 0.173879,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.00025056118203972043,
+          "tool": "amplitude_histogram",
+          "truth": 0.17392257824678892,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 100000.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 100000.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.7967,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.9086127542238488,
+        "cfo_hz": -9040.395939723277,
+        "rrc_beta": 0.4188563728355821,
+        "snr_db": 19.031969618679195,
+        "sps": 10,
+        "symbol_rate_hz": 100000.0
+      }
+    },
+    {
+      "capture_id": "d1292f6fbd88",
+      "envelope_null_lag_error": -9,
+      "envelope_null_period_fraction": 0.5909090909090909,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.332033132033132,
+      "manifest_sha256": "78e34d1acc37329849e5ac31e61778bfa753078f8b42eb6715d953ae9c49b1a0",
+      "measurements": [
+        {
+          "absolute_error": 2736.6875620724677,
+          "estimate": 60546.9,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.04733917151767825,
+          "tool": "spectrum",
+          "truth": 57810.212437927534,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -23.747575563575538,
+          "estimate": -1353.61,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.0178571671228619,
+          "tool": "spectrum",
+          "truth": -1329.8624244364244,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 7.471605222549667e-11,
+          "estimate": 9.14359e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.00823873533315919,
+          "tool": "spectrum",
+          "truth": 9.068873947774504e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.06020845839872624,
+          "estimate": 0.332033132033132,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.22149739975299082,
+          "tool": "spectrum",
+          "truth": 0.27182467363440577,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 23,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.045454545454545456,
+          "tool": "symbol_period_statistic",
+          "truth": 22.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -9.0,
+          "estimate": 13,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.4090909090909091,
+          "tool": "symbol_period_statistic",
+          "truth": 22.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.0003867653294284401,
+          "estimate": 0.19284,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0020096587625065324,
+          "tool": "amplitude_histogram",
+          "truth": 0.19245323467057157,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.045454545455868356,
+          "estimate": 45454.5,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -1.0000000000291038e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 45454.545454545456,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.34568,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.8566787691623933,
+        "cfo_hz": -1329.8624244364244,
+        "rrc_beta": 0.27182467363440577,
+        "snr_db": 19.076629204789032,
+        "sps": 22,
+        "symbol_rate_hz": 45454.545454545456
+      }
+    },
+    {
+      "capture_id": "d20529e86d5d",
+      "envelope_null_lag_error": -14,
+      "envelope_null_period_fraction": 0.5483870967741935,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.5136694349636215,
+      "manifest_sha256": "612c8d5da7f00279177404c62989ba29bfc1cf08202ddce835f8d082231ee777",
+      "measurements": [
+        {
+          "absolute_error": 3877.7865053555797,
+          "estimate": 48828.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.08626828611145497,
+          "tool": "spectrum",
+          "truth": 44950.31349464442,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -21.392520063268876,
+          "estimate": 1734.65,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.012182233527294155,
+          "tool": "spectrum",
+          "truth": 1756.042520063269,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 6.492103621048937e-13,
+          "estimate": 1.7403e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.003744419225802156,
+          "tool": "spectrum",
+          "truth": 1.733807896378951e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.12020971662964458,
+          "estimate": 0.5136694349636215,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.3055197546997887,
+          "tool": "spectrum",
+          "truth": 0.3934597183339769,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 30,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.03225806451612903,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -14.0,
+          "estimate": 17,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.45161290322580644,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -2.0576098482286143e-05,
+          "estimate": 0.0327478,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0006279254858540016,
+          "tool": "amplitude_histogram",
+          "truth": 0.03276837609848229,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03548387096452643,
+          "estimate": 32258.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.0999999999003193e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 32258.064516129034,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 5.73311,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.18238790189979745,
+        "cfo_hz": 1756.042520063269,
+        "rrc_beta": 0.3934597183339769,
+        "snr_db": 22.8308768915843,
+        "sps": 31,
+        "symbol_rate_hz": 32258.064516129034
+      }
+    },
+    {
+      "capture_id": "d4ca64b805a8",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.75,
+      "first_null_lag_error": 2,
+      "implied_beta": 0.28906199999999993,
+      "manifest_sha256": "568a4d4cd05638690f16ea75a5693c4235999543ee1912e7f7b13d738579ff41",
+      "measurements": [
+        {
+          "absolute_error": 1865.9702105518663,
+          "estimate": 64453.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.02981396042332108,
+          "tool": "spectrum",
+          "truth": 62587.12978944813,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 45.315008062746756,
+          "estimate": 1494.76,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.03126369632156999,
+          "tool": "spectrum",
+          "truth": 1449.4449919372532,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.0207882424358196e-11,
+          "estimate": 8.15509e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.012675857764967489,
+          "tool": "spectrum",
+          "truth": 8.053011175756418e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.03731940421103719,
+          "estimate": 0.28906199999999993,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.1482442972913581,
+          "tool": "spectrum",
+          "truth": 0.25174259578896274,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 2.0,
+          "estimate": 22,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.1,
+          "tool": "symbol_period_statistic",
+          "truth": 20.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 15,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.25,
+          "tool": "symbol_period_statistic",
+          "truth": 20.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -7.298316780902925e-05,
+          "estimate": 0.0673686,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0010821686618392628,
+          "tool": "amplitude_histogram",
+          "truth": 0.06744158316780903,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 50000.0,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 0.0,
+          "tool": "symbol_rate_candidates",
+          "truth": 50000.0,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.43173,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.3571786273443021,
+        "cfo_hz": 1449.4449919372532,
+        "rrc_beta": 0.25174259578896274,
+        "snr_db": 21.99621191817088,
+        "sps": 20,
+        "symbol_rate_hz": 50000.0
+      }
+    },
+    {
+      "capture_id": "d533b8ff05ae",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.6153846153846154,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.32030560390831875,
+      "manifest_sha256": "9f39608433aa52491dd1880f7f0b9bd213f17ac7ed0c15f10ed9037c4ac798d2",
+      "measurements": [
+        {
+          "absolute_error": -9596.625558274187,
+          "estimate": 101562.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.08633271156490882,
+          "tool": "spectrum",
+          "truth": 111158.62555827419,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 136.46796592402188,
+          "estimate": 6920.49,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.020116085301395928,
+          "tool": "spectrum",
+          "truth": 6784.022034075978,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 6.562818792041656e-12,
+          "estimate": 4.296e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.015513574417506056,
+          "tool": "spectrum",
+          "truth": 4.2303718120795834e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.12475652834924583,
+          "estimate": 0.32030560390831875,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.28031261099752974,
+          "tool": "spectrum",
+          "truth": 0.4450621322575646,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 14,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.07692307692307693,
+          "tool": "symbol_period_statistic",
+          "truth": 13.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 8,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.38461538461538464,
+          "tool": "symbol_period_statistic",
+          "truth": 13.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.0002323039439307492,
+          "estimate": 0.0357243,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.006545248781267811,
+          "tool": "amplitude_histogram",
+          "truth": 0.03549199605606925,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.02307692308386322,
+          "estimate": 76923.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 3.0000000009022186e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 76923.07692307692,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.4693,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.19897873326424784,
+        "cfo_hz": 6784.022034075978,
+        "rrc_beta": 0.4450621322575646,
+        "snr_db": 19.714100408333707,
+        "sps": 13,
+        "symbol_rate_hz": 76923.07692307692
+      }
+    },
+    {
+      "capture_id": "d86751eeb805",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.6428571428571429,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.3124994750002099,
+      "manifest_sha256": "789c60074d4743cbacc0f4042ee4a4acbd6b0ed87c046bdf4c8921102ddc554e",
+      "measurements": [
+        {
+          "absolute_error": -11597.94708277173,
+          "estimate": 93750.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.11009181862518157,
+          "tool": "spectrum",
+          "truth": 105347.94708277173,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -195.3451524700438,
+          "estimate": -1297.8,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": 0.1771910685573323,
+          "tool": "spectrum",
+          "truth": -1102.4548475299562,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -2.183040874507321e-12,
+          "estimate": 3.03303e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.007146123169025936,
+          "tool": "spectrum",
+          "truth": 3.054860408745073e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.16237178415859427,
+          "estimate": 0.3124994750002099,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.3419280089644142,
+          "tool": "spectrum",
+          "truth": 0.4748712591588042,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 15,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.07142857142857142,
+          "tool": "symbol_period_statistic",
+          "truth": 14.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 9,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.35714285714285715,
+          "tool": "symbol_period_statistic",
+          "truth": 14.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -4.711269597801673e-05,
+          "estimate": 0.0260741,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0018036182518153475,
+          "tool": "amplitude_histogram",
+          "truth": 0.026121212695978016,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.028571428571012802,
+          "estimate": 71428.6,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 3.999999999941792e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 71428.57142857143,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.84732,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.115782604124617,
+        "cfo_hz": -1102.4548475299562,
+        "rrc_beta": 0.4748712591588042,
+        "snr_db": 16.423431878942015,
+        "sps": 14,
+        "symbol_rate_hz": 71428.57142857143
+      }
+    },
+    {
+      "capture_id": "dee3db9d3509",
+      "envelope_null_lag_error": -9,
+      "envelope_null_period_fraction": 0.7096774193548387,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.5136694349636215,
+      "manifest_sha256": "83dd3145577abe26e346b9eeec341837ed4e6047eaa5392ae2afbebb77396ca9",
+      "measurements": [
+        {
+          "absolute_error": 4840.554534412047,
+          "estimate": 48828.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.11004375177512185,
+          "tool": "spectrum",
+          "truth": 43987.54546558795,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -28.279017811649737,
+          "estimate": 3050.26,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.009185856553395775,
+          "tool": "spectrum",
+          "truth": 3078.53901781165,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 1.0101806368350989e-11,
+          "estimate": 1.29433e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.007866052480738838,
+          "tool": "spectrum",
+          "truth": 1.284228193631649e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.15005552553039503,
+          "estimate": 0.5136694349636215,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.41267817769757514,
+          "tool": "spectrum",
+          "truth": 0.36361390943322647,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 31,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -9.0,
+          "estimate": 22,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.2903225806451613,
+          "tool": "symbol_period_statistic",
+          "truth": 31.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.0002912854427554179,
+          "estimate": 0.0518484,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.005649762312279901,
+          "tool": "amplitude_histogram",
+          "truth": 0.051557114557244585,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03548387096452643,
+          "estimate": 32258.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 1.0999999999003193e-06,
+          "tool": "symbol_rate_candidates",
+          "truth": 32258.064516129034,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.00798,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.2692111161751509,
+        "cfo_hz": 3078.53901781165,
+        "rrc_beta": 0.36361390943322647,
+        "snr_db": 17.5162222150696,
+        "sps": 31,
+        "symbol_rate_hz": 32258.064516129034
+      }
+    },
+    {
+      "capture_id": "edbd5d39a604",
+      "envelope_null_lag_error": -10,
+      "envelope_null_period_fraction": 0.6153846153846154,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.5234403234403235,
+      "manifest_sha256": "bc3d2caaf85934e654a3c2caef65792b9cab4e56664672fb2ee0ad6dfb0dd6de",
+      "measurements": [
+        {
+          "absolute_error": 1019.7148405614207,
+          "estimate": 58593.8,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.017711351170193117,
+          "tool": "spectrum",
+          "truth": 57574.08515943858,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 101.55886180332962,
+          "estimate": -143.849,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.41383703462898475,
+          "tool": "spectrum",
+          "truth": -245.4078618033296,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.865695742344515e-12,
+          "estimate": 6.06865e-10,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.006410779772131781,
+          "tool": "spectrum",
+          "truth": 6.029993042576554e-10,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.02651410929492043,
+          "estimate": 0.5234403234403235,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.05335622983890777,
+          "tool": "spectrum",
+          "truth": 0.4969262141454031,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 26,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 26.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -10.0,
+          "estimate": 16,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.38461538461538464,
+          "tool": "symbol_period_statistic",
+          "truth": 26.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 1.8823279452385988e-05,
+          "estimate": 0.0387406,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.0004861161095016971,
+          "tool": "amplitude_histogram",
+          "truth": 0.038721776720547614,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03846153846097877,
+          "estimate": 38461.5,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.999999999854481e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 38461.53846153846,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 7.87557,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.1773282853483309,
+        "cfo_hz": -245.4078618033296,
+        "rrc_beta": 0.4969262141454031,
+        "snr_db": 17.172396219860936,
+        "sps": 26,
+        "symbol_rate_hz": 38461.53846153846
+      }
+    },
+    {
+      "capture_id": "f0945247d20c",
+      "envelope_null_lag_error": -17,
+      "envelope_null_period_fraction": 0.43333333333333335,
+      "first_null_lag_error": 0,
+      "implied_beta": 0.46484446484446473,
+      "manifest_sha256": "1b6a3c76741270619b9750b078c29c4fd1a3025cd023a47800e1030be13d7ad6",
+      "measurements": [
+        {
+          "absolute_error": 4377.660676912958,
+          "estimate": 48828.1,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.09848408122794979,
+          "tool": "spectrum",
+          "truth": 44450.43932308704,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 47.76636335602916,
+          "estimate": -1415.06,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.03265347450154176,
+          "tool": "spectrum",
+          "truth": -1462.826363356029,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": -1.9815015953501704e-11,
+          "estimate": 7.82834e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": -0.002524799257051156,
+          "tool": "spectrum",
+          "truth": 7.848155015953502e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.13133128515185344,
+          "estimate": 0.46484446484446473,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.3937813950048313,
+          "tool": "spectrum",
+          "truth": 0.3335131796926113,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 0.0,
+          "estimate": 30,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.0,
+          "tool": "symbol_period_statistic",
+          "truth": 30.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -17.0,
+          "estimate": 13,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.5666666666666667,
+          "tool": "symbol_period_statistic",
+          "truth": 30.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": 0.000147413368912358,
+          "estimate": 0.136036,
+          "quantity": "rms_magnitude",
+          "relative_error": 0.001084810524319883,
+          "tool": "amplitude_histogram",
+          "truth": 0.13588858663108763,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": -0.03333333333284827,
+          "estimate": 33333.3,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": -9.99999999985448e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 33333.333333333336,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.5207,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.5844974438674254,
+        "cfo_hz": -1462.826363356029,
+        "rrc_beta": 0.3335131796926113,
+        "snr_db": 16.387432799074933,
+        "sps": 30,
+        "symbol_rate_hz": 33333.333333333336
+      }
+    },
+    {
+      "capture_id": "f81edcef9fab",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.6153846153846154,
+      "first_null_lag_error": -1,
+      "implied_beta": 0.34570759628772096,
+      "manifest_sha256": "920bd070ae028d53f5f8a9ea53bc20716d68f17a14cc4ff79b6bbd3aa625f627",
+      "measurements": [
+        {
+          "absolute_error": -8790.819400285676,
+          "estimate": 103516.0,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": -0.07827502770738529,
+          "tool": "spectrum",
+          "truth": 112306.81940028568,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 131.14782032088624,
+          "estimate": -2692.79,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -0.04644146885145786,
+          "tool": "spectrum",
+          "truth": -2823.937820320886,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 3.467088438162132e-10,
+          "estimate": 1.60261e-08,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.022112392015902663,
+          "tool": "spectrum",
+          "truth": 1.5679391156183786e-08,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": -0.11428105591599286,
+          "estimate": 0.34570759628772096,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": -0.2484432069541175,
+          "tool": "spectrum",
+          "truth": 0.4599886522037138,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": -1.0,
+          "estimate": 12,
+          "quantity": "first_null_lag_samples",
+          "relative_error": -0.07692307692307693,
+          "tool": "symbol_period_statistic",
+          "truth": 13.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 8,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.38461538461538464,
+          "tool": "symbol_period_statistic",
+          "truth": 13.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.0013097544307961173,
+          "estimate": 0.23491,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.005544643943738534,
+          "tool": "amplitude_histogram",
+          "truth": 0.23621975443079612,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.02307692308386322,
+          "estimate": 76923.1,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 3.0000000009022186e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 76923.07692307692,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 3.95144,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.918679227291264,
+        "cfo_hz": -2823.937820320886,
+        "rrc_beta": 0.4599886522037138,
+        "snr_db": 17.310148058454892,
+        "sps": 13,
+        "symbol_rate_hz": 76923.07692307692
+      }
+    },
+    {
+      "capture_id": "fa17fdb4be4d",
+      "envelope_null_lag_error": -5,
+      "envelope_null_period_fraction": 0.7916666666666666,
+      "first_null_lag_error": 1,
+      "implied_beta": 0.31249895000084016,
+      "manifest_sha256": "6bf7c9bd3b420e2a569abe27675fcc44595dc19ea227e0920fcb61c7fd99a157",
+      "measurements": [
+        {
+          "absolute_error": 3271.1500479883616,
+          "estimate": 54687.5,
+          "quantity": "occupied_bandwidth_hz",
+          "relative_error": 0.06362081421651712,
+          "tool": "spectrum",
+          "truth": 51416.34995201164,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 92.19160022963021,
+          "estimate": 81.807,
+          "quantity": "spectral_centroid_hz",
+          "relative_error": -8.877722607614826,
+          "tool": "spectrum",
+          "truth": -10.384600229630207,
+          "unit": "Hz"
+        },
+        {
+          "absolute_error": 4.7839537555716994e-11,
+          "estimate": 8.61909e-09,
+          "quantity": "noise_floor_psd",
+          "relative_error": 0.005581395359443794,
+          "tool": "spectrum",
+          "truth": 8.571250462444283e-09,
+          "unit": "power/Hz"
+        },
+        {
+          "absolute_error": 0.07850655115256078,
+          "estimate": 0.31249895000084016,
+          "quantity": "beta_from_occupied_bandwidth",
+          "relative_error": 0.33550898037275306,
+          "tool": "spectrum",
+          "truth": 0.23399239884827938,
+          "unit": "dimensionless"
+        },
+        {
+          "absolute_error": 1.0,
+          "estimate": 25,
+          "quantity": "first_null_lag_samples",
+          "relative_error": 0.041666666666666664,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -5.0,
+          "estimate": 19,
+          "quantity": "first_envelope_null_lag_samples",
+          "relative_error": -0.20833333333333334,
+          "tool": "symbol_period_statistic",
+          "truth": 24.0,
+          "unit": "samples"
+        },
+        {
+          "absolute_error": -0.00013485079217526175,
+          "estimate": 0.171202,
+          "quantity": "rms_magnitude",
+          "relative_error": -0.0007870507223156002,
+          "tool": "amplitude_histogram",
+          "truth": 0.17133685079217525,
+          "unit": "linear"
+        },
+        {
+          "absolute_error": 0.03333333333284827,
+          "estimate": 41666.7,
+          "quantity": "top_symbol_rate_hz",
+          "relative_error": 7.999999999883586e-07,
+          "tool": "symbol_rate_candidates",
+          "truth": 41666.666666666664,
+          "unit": "Hz"
+        }
+      ],
+      "sps_margin_over_next": 2.42955,
+      "sps_rank": 0,
+      "sps_top1": true,
+      "truth": {
+        "amplitude": 0.8932974652713667,
+        "cfo_hz": -10.384600229630207,
+        "rrc_beta": 0.23399239884827938,
+        "snr_db": 19.69252781124997,
+        "sps": 24,
+        "symbol_rate_hz": 41666.666666666664
+      }
+    }
+  ],
+  "schema_version": "1.0",
+  "settings": {
+    "bins": 32,
+    "max_lag": 128,
+    "nfft": 512
+  },
+  "split": "captures/dev-v1",
+  "symbol_rate_ranking": {
+    "n": 40,
+    "top1": 40,
+    "top1_rate": 1.0,
+    "top3": 40
+  },
+  "tools_policy_version": "modembench-tools-v1",
+  "tools_sha256": "c290fb6f7bcbc55dbd40ecf1c41c045abdf9591cc79c9265b4780f2715e92f9f"
+}

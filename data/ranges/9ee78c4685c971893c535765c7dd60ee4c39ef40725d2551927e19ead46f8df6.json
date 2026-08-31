@@ -1,0 +1,12 @@
+{
+ "burst_placement": {
+  "extra_offset_samples": [
+   0,
+   80000
+  ],
+  "trailing_samples": [
+   5000,
+   40000
+  ]
+ }
+}

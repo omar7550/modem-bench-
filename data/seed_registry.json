@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "plain_seed_max": 4294967295,
+  "plain_seed_max_purpose": "Seeds above this bound are reserved for sealed HMAC derivations and may only be generated under an open_sealed token.",
+  "reservations": [
+    {
+      "name": "t1-examples",
+      "start": 0,
+      "stop": 999,
+      "sealed": false,
+      "purpose": "Worked examples and deterministic compatibility goldens"
+    },
+    {
+      "name": "gate-diagnostics",
+      "start": 10000,
+      "stop": 10999,
+      "sealed": false,
+      "purpose": "Non-sealed feasibility-gate diagnostics"
+    },
+    {
+      "name": "dev-v1",
+      "start": 20000,
+      "stop": 20999,
+      "sealed": false,
+      "purpose": "Development split: 40 signals inside a 1000-seed block reserved for headroom"
+    },
+    {
+      "name": "dev-frozen-v1",
+      "start": 30000,
+      "stop": 30999,
+      "sealed": false,
+      "purpose": "Frozen campaign development split: 80 signals inside a 1000-seed block, anchored difficulty (delta=0.70 ranges, burst placement axis on), scored with symbol_rate_candidates withheld"
+    },
+    {
+      "name": "sealed-v1",
+      "sealed": true,
+      "derivation": "hmac-sha256",
+      "salt_sha256": null,
+      "size": 60,
+      "seed_space": "Derived above plain_seed_max. No usable start/stop is published: a 64-bit HMAC-derived space is not brute-forceable, and publishing the range would make the sealed set reproducible from tracked files.",
+      "status": "reserved; the binding commitment is produced immediately after the impairment ranges freeze, at which point salt_sha256 is filled in",
+      "purpose": "Sealed split: 60 signals, seeds HMAC-derived from a salt stored only in the sealed store"
+    }
+  ]
+}

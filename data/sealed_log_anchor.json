@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "log_chain_head": "9145f0b2c04209fed338cc0acada029755cbdbe2c6fbb0d416c1fca97a8cbc8a",
+  "note": "The head of the sealed access log, re-anchored after every append. The chain alone is self-referential, so a wholesale log rewrite is only detectable against a head recorded somewhere the rewrite does not reach. This file is committed but is deliberately NOT a source_tree_provenance input: it moves on every sealed read, and the ledger in data/sealed_access.json is the thing whose edits provenance must expose.",
+  "genesis": {
+    "reset_at": "2026-08-07T00:00:00.000000Z",
+    "genesis_sha256": "9145f0b2c04209fed338cc0acada029755cbdbe2c6fbb0d416c1fca97a8cbc8a",
+    "reason": "The pre-reset log consisted entirely of records asserting the retired, refuted uncounted purpose=\"verify\" class. No genuine sealed session had ever occurred, so the chain was reset rather than extended: the first real sealed run must not chain onto a false history. This note is carried forward across every re-anchor."
+  }
+}

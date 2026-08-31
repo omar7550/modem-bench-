@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "sealed_root": "/var/empty/modembench-sealed",
+  "log_path": "sealed_access_log.jsonl",
+  "max_opens": 2,
+  "authorized_runs": [
+    {
+      "run_name": "sealed-v1-run-1",
+      "split_id": null,
+      "opened_at": null,
+      "session_id": null,
+      "closed_at": null
+    },
+    {
+      "run_name": "sealed-v1-run-2",
+      "split_id": null,
+      "opened_at": null,
+      "session_id": null,
+      "closed_at": null
+    }
+  ],
+  "purpose": "Sealed-split access policy and consumption ledger. Absent or malformed means refuse. MODEMBENCH_SEALED_MAX_OPENS may narrow max_opens, never widen it. max_opens counts consumed authorized_runs entries, globally and not per split_id: re-entry inside a live session is free. Every session is counted \u2014 there is no uncounted class, because verification never needs one.",
+  "authorized_runs_note": "A session must name an entry of this list, and consuming it is recorded here (opened_at, the split_id it binds to, the session id, and closed_at) rather than derived from the access log \u2014 the log is deletable, this file is a source_tree_provenance input. This ledger is read and written HERE even when MODEMBENCH_SEALED_POLICY points elsewhere: an override may only relocate sealed_root and narrow max_opens, because a fresh override file carrying its own ledger is a fresh, unlimited budget. opened_at without closed_at means the session is OPEN: any process may re-enter it by (run_name, split_id), which is what lets an hr-180 campaign of >=360 evaluations survive a restart. A crash still spends the authorization \u2014 opened_at is what a crash cannot unwrite \u2014 it simply does not also brick the campaign. A closed entry is never re-openable.",
+  "sealed_root_note": "Fixed for the project's life, and written as a LITERAL absolute path on purpose. A '~' would resolve through $HOME, so one environment variable relocated both this root and the override at once: the read gate then no-opped and the kernel profile stopped denying the real store. A boundary that moves with the environment of the process it constrains is not a boundary, so '~' is refused rather than expanded, and this path must also lie outside the repository (enforced for this file, not only for overrides). policy_template_sha256 normalizes only the scratch dir and its parent, so this absolute path is baked into every sealed run's replay hash; relocating the store invalidates replay of prior sealed runs.",
+  "log_anchor_note": "The access log's chain head is anchored in data/sealed_log_anchor.json, not here. That file is committed but is deliberately NOT a source_tree_provenance input: it moves on every sealed read, and a provenance input that moves with routine tool use makes an actual policy edit indistinguishable from normal work."
+}
